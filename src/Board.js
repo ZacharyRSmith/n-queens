@@ -79,12 +79,19 @@
     //
     // test if a specific row on this board contains a conflict
     hasRowConflictAt: function(rowIndex) {
-      return false; // fixme
+      //look at each element in the row to check if more than 1 elements are 1
+      var result = this.get(rowIndex).reduce(function(numFound, square) {
+        return numFound + square;
+      }, 0);
+      return result > 1;
     },
 
     // test if any rows on this board contain conflicts
     hasAnyRowConflicts: function() {
-      return false; // fixme
+      // FIXME Use something other than call to this.rows() if available ?
+      return _.range(this.rows().length).some(function(rowIndex) {
+        return this.hasRowConflictAt(rowIndex);
+      }.bind(this));
     },
 
 
