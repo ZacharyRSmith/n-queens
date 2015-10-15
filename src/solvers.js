@@ -70,10 +70,35 @@ window.findNQueensSolution = function(n) {
 
 // return the number of nxn chessboards that exist, with n queens placed such that none of them can attack each other
 window.countNQueensSolutions = function(n) {
-  var solutionCount = undefined; //fixme
+  var _findSolutionsForRow = function(rowIndex, colsRemaining) { // colsRemaining === cols not already occupied by rook
+    // for each of the colsRemaining, find the solution where this row has
+    colsRemaining.forEach(function(colIndex, i) {
+      board.togglePiece(rowIndex, colIndex);
+      var newColsRemaining = colsRemaining.slice();
+      newColsRemaining.splice(i, 1);
+
+      if (rowIndex === board.get('n') - 1) {
+        if (!board.hasAnyQueensConflicts()) {
+          solutionCount++;
+        }
+        board.togglePiece(rowIndex, colIndex);
+      } else {
+        _findSolutionsForRow(rowIndex + 1, newColsRemaining);
+        board.togglePiece(rowIndex, colIndex);
+      }
+    });
+  };
+  var board = new Board({ n: n });
+  var colsRemaining = _.range(0, n);
+  var solutionCount = 0;
+
+  if (n === 0) {
+    solutionCount = 1;
+  } else {
+    // start with the 0th row:
+    _findSolutionsForRow(0, colsRemaining);
+  }
 
   console.log('Number of solutions for ' + n + ' queens:', solutionCount);
   return solutionCount;
 };
-
-// for each row, try finding a 
