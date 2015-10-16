@@ -10,6 +10,30 @@
 // (There are also optimizations that will allow you to skip a lot of the dead search space)
 // take a look at solversSpec.js to see what the tests are expecting
 
+window._findSolution = function(n, callback) {
+  var _findSolutionsForRow = function(rowIndex, emptyCols) {
+    // for each of the emptyCols, find the solution where this row has
+    emptyCols.forEach(function(colIndex, i) {
+      board.togglePiece(rowIndex, colIndex);
+      var newEmptyCols = emptyCols.slice();
+      newEmptyCols.splice(i, 1);
+
+      if (rowIndex === board.get('n') - 1) {
+        solution = callback.call(board, solution);
+        board.togglePiece(rowIndex, colIndex);
+      } else {
+        _findSolutionsForRow(rowIndex + 1, newEmptyCols);
+        board.togglePiece(rowIndex, colIndex);
+      }
+    });
+  };
+  var board = new Board({ n: n });
+  var emptyCols = _.range(0, n);
+  var solution = null;
+
+  _findSolutionsForRow(0, emptyCols);
+  return solution;
+};
 
 // return a matrix (an array of arrays) representing a single nxn chessboard, with n rooks placed such that none of them can attack each other
 
@@ -64,31 +88,15 @@ window.findNQueensSolution = function(n) {
   if (n === 0) {
     return [];
   }
-  var _findSolutionsForRow = function(rowIndex, emptyCols) {
-    // for each of the emptyCols, find the solution where this row has
-    emptyCols.forEach(function(colIndex, i) {
-      board.togglePiece(rowIndex, colIndex);
-      var newEmptyCols = emptyCols.slice();
-      newEmptyCols.splice(i, 1);
 
-      if (rowIndex === board.get('n') - 1) {
-        if (!board.hasAnyQueensConflicts()) {
-          solution = board.rows().map(function(row){
-            return row.slice();
-          });
-        }
-        board.togglePiece(rowIndex, colIndex);
-      } else {
-        _findSolutionsForRow(rowIndex + 1, newEmptyCols);
-        board.togglePiece(rowIndex, colIndex);
-      }
+  var solution = _findSolution(n, function(solution) {
+    if (this.hasAnyQueensConflicts()) {
+      return solution;
+    }
+    return this.rows().map(function(row) {
+      return row.slice();
     });
-  };
-  var board = new Board({ n: n });
-  var emptyCols = _.range(0, n);
-  var solution = null;
-
-  _findSolutionsForRow(0, emptyCols);
+  });
 
   console.log('Single solution for ' + n + ' queens:', JSON.stringify(solution));
 
