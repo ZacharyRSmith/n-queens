@@ -4,7 +4,7 @@
   \__ \ (_) | |\ V /  __/ |  \__ \
   |___/\___/|_| \_/ \___|_|  |___/
 
-*/
+  */
 
 // hint: you'll need to do a full-search of all possible arrangements of pieces!
 // (There are also optimizations that will allow you to skip a lot of the dead search space)
@@ -19,7 +19,7 @@ window._findSolution = function(n, callback) {
       newEmptyCols.splice(i, 1);
 
       if (rowIndex === board.get('n') - 1) {
-        solution = callback.call(board, solution);
+        solution = callback(board, solution);
         board.togglePiece(rowIndex, colIndex);
       } else {
         _findSolutionsForRow(rowIndex + 1, newEmptyCols);
@@ -29,7 +29,7 @@ window._findSolution = function(n, callback) {
   };
   var board = new Board({ n: n });
   var emptyCols = _.range(0, n);
-  var solution = null;
+  var solution = 0;
 
   _findSolutionsForRow(0, emptyCols);
   return solution;
@@ -54,31 +54,19 @@ window.findNRooksSolution = function(n) {
 
 // return the number of nxn chessboards that exist, with n rooks placed such that none of them can attack each other
 window.countNRooksSolutions = function(n) {
-  var _findSolutionsForRow = function(rowIndex, emptyCols) { // emptyCols === cols not already occupied by rook
-    // for each of the emptyCols, find the solution where this row has
-    emptyCols.forEach(function(colIndex, i) {
-      board.togglePiece(rowIndex, colIndex);
-      var newEmptyCols = emptyCols.slice();
-      newEmptyCols.splice(i, 1);
+  if (n === 0) {
+    return 1;
+  }
+  var solution = _findSolution(n, function(board, solution) {
+    if (!board.hasAnyRooksConflicts()) {
+      return solution + 1;
+    } else {
+      return solution;
+    }
+  });
 
-      if (rowIndex === board.get('n') - 1) {
-        solutionCount++;
-        board.togglePiece(rowIndex, colIndex);
-      } else {
-        _findSolutionsForRow(rowIndex + 1, newEmptyCols);
-        board.togglePiece(rowIndex, colIndex);
-      }
-    });
-  };
-
-  var board = new Board({ n: n });
-  var emptyCols = _.range(0, n);
-  var solutionCount = 0;
-
-  _findSolutionsForRow(0, emptyCols);
-
-  console.log('Number of solutions for ' + n + ' rooks:', solutionCount);
-  return solutionCount;
+  console.log('Number of solutions for ' + n + ' rooks:', solution);
+  return solution;
 };
 
 
@@ -89,18 +77,18 @@ window.findNQueensSolution = function(n) {
     return [];
   }
 
-  var solution = _findSolution(n, function(solution) {
-    if (this.hasAnyQueensConflicts()) {
+  var solution = _findSolution(n, function(board, solution) {
+    if (board.hasAnyQueensConflicts()) {
       return solution;
     }
-    return this.rows().map(function(row) {
+    return board.rows().map(function(row) {
       return row.slice();
     });
   });
 
   console.log('Single solution for ' + n + ' queens:', JSON.stringify(solution));
 
-  if (solution === null) {
+  if (!solution) {
     var solutionBoard = new Board({ n: n });
     return solutionBoard.rows();
   }
@@ -110,35 +98,18 @@ window.findNQueensSolution = function(n) {
 
 // return the number of nxn chessboards that exist, with n queens placed such that none of them can attack each other
 window.countNQueensSolutions = function(n) {
-  var _findSolutionsForRow = function(rowIndex, emptyCols) { // emptyCols === cols not already occupied by rook
-    // for each of the emptyCols, find the solution where this row has
-    emptyCols.forEach(function(colIndex, i) {
-      board.togglePiece(rowIndex, colIndex);
-      var newEmptyCols = emptyCols.slice();
-      newEmptyCols.splice(i, 1);
-
-      if (rowIndex === board.get('n') - 1) {
-        if (!board.hasAnyQueensConflicts()) {
-          solutionCount++;
-        }
-        board.togglePiece(rowIndex, colIndex);
-      } else {
-        _findSolutionsForRow(rowIndex + 1, newEmptyCols);
-        board.togglePiece(rowIndex, colIndex);
-      }
-    });
-  };
-  var board = new Board({ n: n });
-  var emptyCols = _.range(0, n);
-  var solutionCount = 0;
-
   if (n === 0) {
-    solutionCount = 1;
-  } else {
-    // start with the 0th row:
-    _findSolutionsForRow(0, emptyCols);
+    return 1;
   }
+  var solution = _findSolution(n, function(board, solution){
+    if (!board.hasAnyQueensConflicts()) {
+      return solution + 1;
+    } else {
+      return solution;
+    }
+  });
 
-  console.log('Number of solutions for ' + n + ' queens:', solutionCount);
-  return solutionCount;
+  console.log('Number of solutions for ' + n + ' queens:', solution);
+
+  return solution;
 };
