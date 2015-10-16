@@ -15,13 +15,19 @@ window._findSolution = function(n, callback) {
     // for each of the emptyCols, find the solution where this row has
     emptyCols.forEach(function(colIndex, i) {
       board.togglePiece(rowIndex, colIndex);
-      var newEmptyCols = emptyCols.slice();
-      newEmptyCols.splice(i, 1);
 
-      if (rowIndex === board.get('n') - 1) {
+      if (board.hasMajorDiagonalConflictAt(colIndex - rowIndex) ||
+          board.hasMinorDiagonalConflictAt(colIndex + rowIndex)) {
+        board.togglePiece(rowIndex, colIndex);
+        return;
+      }
+
+      if (board._isLastRow(rowIndex)) {
         solution = callback(board, solution);
         board.togglePiece(rowIndex, colIndex);
       } else {
+        var newEmptyCols = emptyCols.slice();
+        newEmptyCols.splice(i, 1);
         _findSolutionsForRow(rowIndex + 1, newEmptyCols);
         board.togglePiece(rowIndex, colIndex);
       }
@@ -57,16 +63,31 @@ window.countNRooksSolutions = function(n) {
   if (n === 0) {
     return 1;
   }
-  var solution = _findSolution(n, function(board, solution) {
-    if (!board.hasAnyRooksConflicts()) {
-      return solution + 1;
-    } else {
-      return solution;
-    }
-  });
+  var _findSolutionsForRow = function(rowIndex, emptyCols) {
+    // for each of the emptyCols, place rook there and go to next row.
+    // if this is the last row, then you've arrived at a solution.
+    emptyCols.forEach(function(colIndex, i) {
+      board.togglePiece(rowIndex, colIndex);
 
-  console.log('Number of solutions for ' + n + ' rooks:', solution);
-  return solution;
+      if (board._isLastRow(rowIndex)) {
+        solutionCount++;
+        board.togglePiece(rowIndex, colIndex);
+      } else {
+        var newEmptyCols = emptyCols.slice();
+        newEmptyCols.splice(i, 1);
+        _findSolutionsForRow(rowIndex + 1, newEmptyCols);
+        board.togglePiece(rowIndex, colIndex);
+      }
+    });
+  };
+  var board = new Board({ n: n });
+  var emptyCols = _.range(0, n);
+  var solutionCount = 0;
+
+  _findSolutionsForRow(0, emptyCols);
+
+  console.log('Number of solutions for ' + n + ' rooks:', solutionCount);
+  return solutionCount;
 };
 
 
@@ -78,9 +99,6 @@ window.findNQueensSolution = function(n) {
   }
 
   var solution = _findSolution(n, function(board, solution) {
-    if (board.hasAnyQueensConflicts()) {
-      return solution;
-    }
     return board.rows().map(function(row) {
       return row.slice();
     });
@@ -101,15 +119,10 @@ window.countNQueensSolutions = function(n) {
   if (n === 0) {
     return 1;
   }
-  var solution = _findSolution(n, function(board, solution){
-    if (!board.hasAnyQueensConflicts()) {
-      return solution + 1;
-    } else {
-      return solution;
-    }
+  var solution = _findSolution(n, function(board, solution) {
+    return solution + 1;
   });
 
   console.log('Number of solutions for ' + n + ' queens:', solution);
-
   return solution;
 };

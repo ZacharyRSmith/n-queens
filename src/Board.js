@@ -37,6 +37,10 @@
       return colIndex + rowIndex;
     },
 
+    _isLastRow: function(rowIndex) {
+      return rowIndex === this.get('n') - 1;
+    },
+
     hasAnyRooksConflicts: function() {
       return this.hasAnyRowConflicts() || this.hasAnyColConflicts();
     },
